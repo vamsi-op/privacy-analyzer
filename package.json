@@ -1,0 +1,28 @@
+{
+  "name": "privacy-analyzer",
+  "version": "0.1.0",
+  "description": "Local-first privacy analyzer - browser extension and CLI for detecting trackers and fingerprinting",
+  "private": true,
+  "workspaces": [
+    "extension",
+    "cli"
+  ],
+  "scripts": {
+    "build:extension": "cd extension && npm run build",
+    "build:cli": "cd cli && npm run build",
+    "test": "npm run test --workspaces"
+  },
+  "keywords": [
+    "privacy",
+    "security",
+    "browser-extension",
+    "tracker-detection",
+    "local-first",
+    "hacktoberfest"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.50.0"
+  }
+}

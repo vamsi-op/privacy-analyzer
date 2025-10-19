@@ -1,0 +1,17 @@
+{
+  "name": "privacy-analyzer-extension",
+  "version": "0.1.0",
+  "description": "Browser extension for local-first privacy analysis",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'Extension ready for manual load'",
+    "test": "echo 'No tests yet - add your first test!'"
+  },
+  "keywords": [
+    "privacy",
+    "browser-extension",
+    "tracker-detection"
+  ],
+  "author": "",
+  "license": "MIT"
+}

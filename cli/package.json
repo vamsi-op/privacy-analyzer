@@ -1,0 +1,23 @@
+{
+  "name": "privacy-analyzer-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for local-first privacy analysis of websites",
+  "main": "index.js",
+  "bin": {
+    "privacy-analyzer": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo 'No tests yet - add your first test!'"
+  },
+  "keywords": [
+    "privacy",
+    "cli",
+    "tracker-detection"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0"
+  }
+}
