@@ -19,14 +19,17 @@ program
   .description('Analyze a URL for privacy issues')
   .argument('<url>', 'URL to analyze')
   .option('-o, --output <file>', 'Output JSON report to file')
+  .option('-f, --filter <types>', 'Filter results by type (trackers,eval,fingerprinting,all)', 'all')
   .action(async (url, options) => {
     console.log(`🔍 Analyzing: ${url}\n`);
 
     try {
+      const filters = parseFilters(options.filter);
       const html = await fetchPage(url);
-      const results = analyzeHTML(html, url);
+      let results = analyzeHTML(html, url);
+      results = filterResults(results, filters);
       
-      displayResults(results);
+      displayResults(results, filters);
 
       if (options.output) {
         const fs = require('fs');
@@ -40,6 +43,44 @@ program
   });
 
 program.parse();
+
+// Parse and validate filter types
+function parseFilters(filterString) {
+  const validFilters = ['trackers', 'eval', 'fingerprinting', 'all'];
+  const filters = filterString.split(',').map(f => f.trim().toLowerCase());
+  
+  // Validate filters
+  const invalid = filters.filter(f => !validFilters.includes(f));
+  if (invalid.length > 0) {
+    throw new Error(`Invalid filter type(s): ${invalid.join(', ')}\nValid types: ${validFilters.join(', ')}`);
+  }
+  
+  return filters.includes('all') ? validFilters.slice(0, -1) : filters;
+}
+
+// Filter results based on user selection
+function filterResults(results, filters) {
+  const filtered = { ...results };
+  
+  if (!filters.includes('trackers')) {
+    filtered.thirdPartyDomains = [];
+  }
+  if (!filters.includes('eval')) {
+    filtered.inlineEvalPatterns = [];
+  }
+  if (!filters.includes('fingerprinting')) {
+    filtered.fingerprintingAPIs = [];
+  }
+  
+  // Update summary counts
+  filtered.summary = {
+    totalThirdPartyDomains: filtered.thirdPartyDomains.length,
+    totalEvalPatterns: filtered.inlineEvalPatterns.length,
+    totalFingerprintingAPIs: filtered.fingerprintingAPIs.length
+  };
+  
+  return filtered;
+}
 
 // Fetch HTML content
 function fetchPage(url) {
@@ -125,9 +166,10 @@ function analyzeHTML(html, url) {
 }
 
 // Display results in terminal
-function displayResults(results) {
+function displayResults(results, filters = ['trackers', 'eval', 'fingerprinting']) {
   console.log('📊 Analysis Results');
   console.log('='.repeat(50));
+  console.log(`\n🔍 Active Filters: ${filters.join(', ')}`);
   
   console.log(`\n📡 Third-Party Domains (${results.summary.totalThirdPartyDomains}):`);
   if (results.thirdPartyDomains.length === 0) {

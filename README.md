@@ -47,13 +47,29 @@ All analysis happens on your device. No data is sent to remote servers, ensuring
 
 2. **Run analysis:**
    ```bash
+   # Analyze all privacy issues
    node index.js analyze https://example.com
+
+   # Filter specific types of issues
+   node index.js analyze https://example.com --filter trackers
+   node index.js analyze https://example.com --filter eval,fingerprinting
    ```
 
 3. **Export report:**
    ```bash
+   # Export all results
    node index.js analyze https://example.com --output report.json
+
+   # Export filtered results
+   node index.js analyze https://example.com --filter trackers --output trackers.json
    ```
+
+4. **Available filters:**
+   - `trackers`: Show only third-party domains
+   - `eval`: Show only inline eval patterns
+   - `fingerprinting`: Show only fingerprinting APIs
+   - `all`: Show everything (default)
+   - Use comma-separated values for multiple filters
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "url": "https://example.com",
+  "timestamp": "2025-10-19T15:44:32.027Z",
+  "thirdPartyDomains": [],
+  "inlineEvalPatterns": [],
+  "fingerprintingAPIs": [],
+  "summary": {
+    "totalThirdPartyDomains": 0,
+    "totalEvalPatterns": 0,
+    "totalFingerprintingAPIs": 0
+  }
+}
