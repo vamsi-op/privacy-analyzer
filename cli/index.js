@@ -171,34 +171,40 @@ function displayResults(results, filters = ['trackers', 'eval', 'fingerprinting'
   console.log('='.repeat(50));
   console.log(`\n🔍 Active Filters: ${filters.join(', ')}`);
   
-  console.log(`\n📡 Third-Party Domains (${results.summary.totalThirdPartyDomains}):`);
-  if (results.thirdPartyDomains.length === 0) {
-    console.log('  ✓ None detected');
-  } else {
-    results.thirdPartyDomains.slice(0, 10).forEach(domain => {
-      console.log(`  - ${domain}`);
-    });
-    if (results.thirdPartyDomains.length > 10) {
-      console.log(`  ... and ${results.thirdPartyDomains.length - 10} more`);
+  if (filters.includes('trackers')) {
+    console.log(`\n📡 Third-Party Domains (${results.summary.totalThirdPartyDomains}):`);
+    if (results.thirdPartyDomains.length === 0) {
+      console.log('  ✓ None detected');
+    } else {
+      results.thirdPartyDomains.slice(0, 10).forEach(domain => {
+        console.log(`  - ${domain}`);
+      });
+      if (results.thirdPartyDomains.length > 10) {
+        console.log(`  ... and ${results.thirdPartyDomains.length - 10} more`);
+      }
     }
   }
 
-  console.log(`\n⚠  Inline Eval Patterns (${results.summary.totalEvalPatterns}):`);
-  if (results.inlineEvalPatterns.length === 0) {
-    console.log('  ✓ None detected');
-  } else {
-    results.inlineEvalPatterns.forEach(pattern => {
-      console.log(`  - Script #${pattern.index}: ${pattern.snippet}`);
-    });
+  if (filters.includes('eval')) {
+    console.log(`\n⚠  Inline Eval Patterns (${results.summary.totalEvalPatterns}):`);
+    if (results.inlineEvalPatterns.length === 0) {
+      console.log('  ✓ None detected');
+    } else {
+      results.inlineEvalPatterns.forEach(pattern => {
+        console.log(`  - Script #${pattern.index}: ${pattern.snippet}`);
+      });
+    }
   }
 
-  console.log(`\n👁  Fingerprinting APIs (${results.summary.totalFingerprintingAPIs}):`);
-  if (results.fingerprintingAPIs.length === 0) {
-    console.log('  ✓ None detected');
-  } else {
-    results.fingerprintingAPIs.forEach(api => {
-      console.log(`  - ${api}`);
-    });
+  if (filters.includes('fingerprinting')) {
+    console.log(`\n👁  Fingerprinting APIs (${results.summary.totalFingerprintingAPIs}):`);
+    if (results.fingerprintingAPIs.length === 0) {
+      console.log('  ✓ None detected');
+    } else {
+      results.fingerprintingAPIs.forEach(api => {
+        console.log(`  - ${api}`);
+      });
+    }
   }
 
   console.log('\n' + '='.repeat(50));
