@@ -47,7 +47,13 @@
     return evalPatterns;
   }
 
-  // Enhanced detection for dangerous JavaScript patterns
+  /**
+   * Enhanced detection for dangerous JavaScript patterns
+   * Scans code for eval(), Function constructor, setTimeout/setInterval with strings,
+   * and obfuscated eval patterns while avoiding false positives from comments
+   * @param {string} code - JavaScript code to analyze
+   * @returns {Array<Object>} Array of detected patterns with line numbers and context
+   */
   function detectDangerousPatterns(code) {
     const detections = [];
 
@@ -71,7 +77,7 @@
       },
       {
         name: 'Function constructor (no new)',
-        regex: /\bFunction\s*\(/g,
+        regex: /(?<![.\w])Function\s*\(/g,
         description: 'Function constructor without new keyword'
       },
       {
@@ -98,8 +104,8 @@
 
     // Check each pattern
     patterns.forEach(pattern => {
+      const regex = new RegExp(pattern.regex.source, 'g'); // Ensure global flag for proper iteration
       let match;
-      const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
 
       while ((match = regex.exec(codeWithoutComments)) !== null) {
         // Find line number and context
@@ -119,7 +125,11 @@
     return detections;
   }
 
-  // Remove single-line and multi-line comments to avoid false positives
+  /**
+   * Remove single-line and multi-line comments to avoid false positives
+   * @param {string} code - JavaScript code
+   * @returns {string} Code with comments removed
+   */
   function removeComments(code) {
     // Remove multi-line comments /* ... */
     let cleaned = code.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -128,7 +138,12 @@
     return cleaned;
   }
 
-  // Get line number and context for a given position in code
+  /**
+   * Get line number and context for a given position in code
+   * @param {Array<string>} lines - Array of code lines
+   * @param {number} position - Character position in the code
+   * @returns {Object} Object with lineNumber, column, and snippet
+   */
   function getLineContext(lines, position) {
     let currentPos = 0;
     let lineNumber = 1;
