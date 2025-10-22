@@ -4,6 +4,7 @@
 
   const trackerList = document.getElementById('trackerList');
   const evalCount = document.getElementById('evalCount');
+  const fingerprintList = document.getElementById('fingerprintList');
   const exportBtn = document.getElementById('exportBtn');
 
   // Get current tab
@@ -23,8 +24,9 @@
 
       // Get the most recent analysis
       const latestData = trackers[trackers.length - 1];
-      const domains = latestData.thirdPartyDomains || [];
-      const evalPatterns = latestData.inlineEvalPatterns || [];
+  const domains = latestData.thirdPartyDomains || [];
+  const evalPatterns = latestData.inlineEvalPatterns || [];
+  const fingerprinting = latestData.fingerprintingAPIs || [];
 
       // Display top 3 third-party domains
       if (domains.length === 0) {
@@ -47,6 +49,15 @@
         evalCount.innerHTML = `<span style="color: #FF9800; font-weight: 500;">⚠ ${evalPatterns.length} inline eval pattern(s) detected</span>`;
       }
 
+      // Display fingerprinting detections (simple list)
+      if (fingerprinting.length === 0) {
+        if (fingerprintList) fingerprintList.innerHTML = '<li class="tracker-item no-trackers">✓ No fingerprinting APIs detected</li>';
+      } else {
+        if (fingerprintList) {
+          fingerprintList.innerHTML = fingerprinting.map(f => `<li class="tracker-item">👁 ${f}</li>`).join('');
+        }
+      }
+
       // Export functionality
       exportBtn.addEventListener('click', () => {
         const report = {
@@ -54,9 +65,11 @@
           timestamp: new Date(latestData.timestamp).toISOString(),
           thirdPartyDomains: domains,
           inlineEvalPatterns: evalPatterns,
+          fingerprintingAPIs: fingerprinting,
           summary: {
             totalThirdPartyDomains: domains.length,
-            totalEvalPatterns: evalPatterns.length
+            totalEvalPatterns: evalPatterns.length,
+            totalFingerprintingAPIs: fingerprinting.length
           }
         };
 
