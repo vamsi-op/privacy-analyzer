@@ -13,6 +13,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       trackerDomains.get(tabId).push(message.data);
     }
+  } else if (message.type === 'CANVAS_FINGERPRINT') {
+    // Canvas fingerprinting messages may be sent immediately from content script
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      if (!trackerDomains.has(tabId)) {
+        trackerDomains.set(tabId, []);
+      }
+
+      // Store canvas detection in a dedicated entry to keep timelines
+      const entry = {
+        url: message.data.url || sender.tab?.url || null,
+        timestamp: message.data.timestamp || Date.now(),
+        canvasDetections: [message.data]
+      };
+
+      trackerDomains.get(tabId).push(entry);
+    }
   } else if (message.type === 'GET_TRACKERS') {
     const tabId = message.tabId;
     const trackers = trackerDomains.get(tabId) || [];

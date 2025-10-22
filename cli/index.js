@@ -149,7 +149,17 @@ function analyzeHTML(html, url) {
     'screen.height'
   ];
 
+  // Detect direct mentions in HTML
   const detectedAPIs = fingerprintingAPIs.filter(api => html.includes(api));
+
+  // Also scan inline scripts for canvas-specific calls
+  const lowerHtml = html.toLowerCase();
+  if (lowerHtml.includes('todataurl') && !detectedAPIs.includes('canvas.toDataURL')) {
+    detectedAPIs.push('canvas.toDataURL');
+  }
+  if (lowerHtml.includes('getimagedata') && !detectedAPIs.includes('getImageData')) {
+    detectedAPIs.push('getImageData');
+  }
 
   return {
     url,
