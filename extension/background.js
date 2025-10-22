@@ -11,7 +11,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (!trackerDomains.has(tabId)) {
         trackerDomains.set(tabId, []);
       }
-      trackerDomains.get(tabId).push(message.data);
+      // Ensure fingerprintingAPIs and inlineEvalPatterns exist for older messages
+      const data = Object.assign({ fingerprintingAPIs: [], inlineEvalPatterns: [] }, message.data);
+      trackerDomains.get(tabId).push(data);
     }
   } else if (message.type === 'CANVAS_FINGERPRINT') {
     // Canvas fingerprinting messages may be sent immediately from content script

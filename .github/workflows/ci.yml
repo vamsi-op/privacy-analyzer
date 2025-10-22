@@ -33,9 +33,13 @@ jobs:
       run: npm run lint --if-present
       continue-on-error: true
     
-    - name: Run tests
+    - name: Run root tests
       run: npm test --if-present
       continue-on-error: true
+
+    - name: Run CLI tests
+      run: npm --prefix cli test
+      continue-on-error: false
     
     - name: Check extension manifest
       run: |
