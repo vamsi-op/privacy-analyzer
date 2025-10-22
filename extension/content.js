@@ -175,6 +175,7 @@
   const thirdPartyDomains = detectThirdPartyScripts();
   const inlineEvalPatterns = detectInlineScripts();
   const fingerprintingAPIs = detectFingerprinting();
+  const canvasDetections = detectCanvasFingerprinting();
 
   // Send results to background script
   chrome.runtime.sendMessage({
@@ -184,6 +185,7 @@
       thirdPartyDomains,
       inlineEvalPatterns,
       fingerprintingAPIs,
+      canvasDetections,
       timestamp: Date.now()
     }
   });
@@ -230,4 +232,99 @@ function detectFingerprinting() {
   });
 
   return Array.from(detections);
+}
+
+/**
+ * Advanced runtime canvas fingerprinting detection.
+ * Intercepts canvas API calls to detect actual fingerprinting attempts.
+ * Returns an array of detection events with details.
+ */
+function detectCanvasFingerprinting() {
+  try {
+    const detections = [];
+
+    // Helper to record a detection
+    function record(canvasInfo) {
+      const payload = Object.assign({ url: window.location.href, timestamp: Date.now() }, canvasInfo);
+      detections.push(payload);
+      try {
+        // Send immediate message to background for real-time storage
+        chrome.runtime.sendMessage({ type: 'CANVAS_FINGERPRINT', data: payload });
+      } catch (e) {
+        // Ignore messaging errors
+      }
+    }
+
+    // Proxy canvas prototype methods to detect calls
+    const HTMLCanvasProto = HTMLCanvasElement && HTMLCanvasElement.prototype;
+    if (HTMLCanvasProto) {
+      const originalToDataURL = HTMLCanvasProto.toDataURL;
+      HTMLCanvasProto.toDataURL = function () {
+        try {
+          const info = {
+            method: 'toDataURL',
+            width: this.width,
+            height: this.height,
+            inDOM: !!this.isConnected
+          };
+          record(info);
+        } catch (e) {}
+        return originalToDataURL.apply(this, arguments);
+      };
+
+      const originalGetImageData = CanvasRenderingContext2D && CanvasRenderingContext2D.prototype.getImageData;
+      if (originalGetImageData) {
+        CanvasRenderingContext2D.prototype.getImageData = function () {
+          try {
+            const canvas = this.canvas;
+            const info = {
+              method: 'getImageData',
+              width: canvas ? canvas.width : null,
+              height: canvas ? canvas.height : null,
+              inDOM: canvas ? !!canvas.isConnected : null
+            };
+            record(info);
+          } catch (e) {}
+          return originalGetImageData.apply(this, arguments);
+        };
+      }
+
+      // Monitor creation of canvases to detect invisible usage patterns
+      const originalCreateElement = Document.prototype.createElement;
+      Document.prototype.createElement = function (tagName) {
+        const el = originalCreateElement.call(this, tagName);
+        try {
+          if (String(tagName).toLowerCase() === 'canvas') {
+            // Observe if canvas is ever attached to DOM within a short time window
+            const createdAt = Date.now();
+            let attached = false;
+            const checkAttached = () => !!el.isConnected;
+
+            const observer = new MutationObserver(() => {
+              if (checkAttached()) {
+                attached = true;
+                observer.disconnect();
+              }
+            });
+            observer.observe(document, { childList: true, subtree: true });
+
+            // After 2 seconds, if not attached and small size, mark suspicious
+            setTimeout(() => {
+              observer.disconnect();
+              const w = el.width || el.clientWidth || 0;
+              const h = el.height || el.clientHeight || 0;
+              if (!attached && (w <= 300 && h <= 150)) {
+                record({ method: 'createElement', width: w, height: h, inDOM: false, note: 'canvas created but not attached (possible fingerprinting)' });
+              }
+            }, 2000);
+          }
+        } catch (e) {}
+        return el;
+      };
+    }
+
+    return detections;
+  } catch (e) {
+    return [];
+  }
 }
