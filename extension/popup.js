@@ -5,6 +5,7 @@
   const trackerList = document.getElementById('trackerList');
   const evalCount = document.getElementById('evalCount');
   const fingerprintList = document.getElementById('fingerprintList');
+  const canvasCount = document.getElementById('canvasCount');
   const exportBtn = document.getElementById('exportBtn');
 
   // --- Helpers ---
@@ -129,6 +130,7 @@
       const domains = (latestData && Array.isArray(latestData.thirdPartyDomains)) ? latestData.thirdPartyDomains : [];
       const evalPatterns = (latestData && Array.isArray(latestData.inlineEvalPatterns)) ? latestData.inlineEvalPatterns : [];
       const fingerprinting = (latestData && Array.isArray(latestData.fingerprintingAPIs)) ? latestData.fingerprintingAPIs : [];
+      const canvasDetections = (latestData && Array.isArray(latestData.canvasDetections)) ? latestData.canvasDetections : [];
 
       // Display top 3 third-party domains
       if (domains.length === 0) {
@@ -174,6 +176,16 @@
         }
       }
 
+      // Display canvas fingerprinting detections
+      if (canvasDetections.length === 0) {
+        if (canvasCount) canvasCount.innerHTML = '<span class="no-trackers">✓ No canvas fingerprinting detected</span>';
+      } else {
+        const suspiciousCount = canvasDetections.filter(d => !d.inDOM || d.note).length;
+        if (canvasCount) {
+          canvasCount.innerHTML = `<span style="color: #FF5722; font-weight: 500;">🎨 ${canvasDetections.length} canvas API call(s) detected (${suspiciousCount} suspicious)</span>`;
+        }
+      }
+
       // Export functionality
       exportBtn.addEventListener('click', () => {
         const report = {
@@ -202,10 +214,16 @@
             thirdPartyDomains: domains,
             inlineEvalPatterns: evalPatterns,
             fingerprintingAPIs: fingerprinting,
+            canvasFingerprinting: {
+              detections: canvasDetections,
+              totalCalls: canvasDetections.length,
+              suspiciousCalls: canvasDetections.filter(d => !d.inDOM || d.note).length
+            },
             summary: {
               totalThirdPartyDomains: domains.length,
               totalEvalPatterns: evalPatterns.length,
-              totalFingerprintingAPIs: fingerprinting.length
+              totalFingerprintingAPIs: fingerprinting.length,
+              totalCanvasCalls: canvasDetections.length
             },
             browser,
             extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
