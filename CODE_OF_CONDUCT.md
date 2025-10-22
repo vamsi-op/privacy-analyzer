@@ -32,7 +32,7 @@ Examples of unacceptable behavior by participants include:
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project maintainers at <INSERT_CONTACT_EMAIL>.
+reported by contacting the project maintainers via GitHub issues.
 All complaints will be reviewed and investigated and will result in a response
 that is deemed necessary and appropriate to the circumstances. The project
 maintainers are obligated to maintain confidentiality with regard to the
@@ -45,4 +45,4 @@ version 2.0. See the Contributor Covenant for full details.
 
 [homepage]: https://www.contributor-covenant.org
 
-If you need to report an incident, please contact the maintainers at <mailto:replace-with-contact@example.com>.
+For incident reporting, please use GitHub issues or contact the project maintainers directly.
