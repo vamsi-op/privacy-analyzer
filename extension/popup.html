@@ -10,41 +10,108 @@
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
+      transition: background-color 0.3s, color 0.3s;
     }
+    
+    body.light-theme {
+      background-color: #ffffff;
+      color: #333333;
+    }
+    
+    body.dark-theme {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    
     h1 {
       font-size: 18px;
       margin: 0 0 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+    }
+    
+    .theme-toggle:hover {
+      background-color: rgba(128, 128, 128, 0.2);
+    }
+    
+    .light-theme .theme-toggle {
       color: #333;
     }
+    
+    .dark-theme .theme-toggle {
+      color: #e0e0e0;
+    }
+    
     .section {
       margin-bottom: 16px;
     }
+    
     .section-title {
       font-weight: 600;
       margin-bottom: 8px;
+    }
+    
+    .light-theme .section-title {
       color: #555;
     }
+    
+    .dark-theme .section-title {
+      color: #bbbbbb;
+    }
+    
     .tracker-list {
       list-style: none;
       padding: 0;
       margin: 0;
     }
+    
     .tracker-item {
       padding: 8px;
       margin-bottom: 4px;
-      background: #f5f5f5;
       border-radius: 4px;
       font-size: 12px;
       word-break: break-all;
     }
+    
+    .light-theme .tracker-item {
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    .dark-theme .tracker-item {
+      background: #2d2d2d;
+      color: #e0e0e0;
+    }
+    
     .no-trackers {
-      color: #4CAF50;
       font-weight: 500;
     }
+    
+    .light-theme .no-trackers {
+      color: #4CAF50;
+    }
+    
+    .dark-theme .no-trackers {
+      color: #4CAF50;
+    }
+    
     .button {
       padding: 8px 16px;
-      background: #2196F3;
-      color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -52,20 +119,48 @@
       width: 100%;
       margin-top: 8px;
     }
-    .button:hover {
+    
+    .light-theme .button {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .light-theme .button:hover {
       background: #1976D2;
     }
+    
+    .dark-theme .button {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .dark-theme .button:hover {
+      background: #1976D2;
+    }
+    
     .footer {
       margin-top: 16px;
       padding-top: 16px;
-      border-top: 1px solid #eee;
       font-size: 12px;
+      border-top: 1px solid;
+    }
+    
+    .light-theme .footer {
+      border-top-color: #eee;
+      color: #888;
+    }
+    
+    .dark-theme .footer {
+      border-top-color: #333;
       color: #888;
     }
   </style>
 </head>
-<body>
-  <h1>🔒 Privacy Analyzer</h1>
+<body class="light-theme">
+  <h1>
+    🔒 Privacy Analyzer
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+  </h1>
   
   <div class="section">
     <div class="section-title">Top Third-Party Domains:</div>

@@ -5,7 +5,7 @@
   "main": "background.js",
   "scripts": {
     "build": "echo 'Extension ready for manual load'",
-    "test": "echo 'No tests yet - add your first test!'"
+    "test": "node test/test_popup.js"
   },
   "keywords": [
     "privacy",

@@ -10,6 +10,7 @@ A **local-first** privacy analyzer that detects trackers, third-party scripts, a
 - **Real-time Canvas Fingerprinting Detection** - intercepts canvas API calls
 - Fingerprinting API detection (navigator, screen, WebGL)
 - Export detailed JSON reports
+- **Light/Dark Mode Toggle** - switch between themes for comfortable viewing
 - All analysis happens locally in your browser
 
 ✅ **CLI Tool**
@@ -38,6 +39,7 @@ All analysis happens on your device. No data is sent to remote servers, ensuring
    - Visit any website
    - Click the Privacy Analyzer icon
    - View detected trackers and export reports
+   - Toggle between light and dark themes using the 🌙/☀️ icon in the top right corner
 
 ### CLI Tool
 

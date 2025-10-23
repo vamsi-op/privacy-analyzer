@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Privacy Analyzer - README Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        
+        body.dark-theme {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+        
+        h1, h2, h3, h4 {
+            border-bottom: 1px solid #eee;
+        }
+        
+        body.dark-theme h1, 
+        body.dark-theme h2, 
+        body.dark-theme h3, 
+        body.dark-theme h4 {
+            border-bottom: 1px solid #333;
+        }
+        
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        body.dark-theme code {
+            background-color: #2d2d2d;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        body.dark-theme pre {
+            background-color: #2d2d2d;
+        }
+        
+        a {
+            color: #2196F3;
+        }
+        
+        body.dark-theme a {
+            color: #4dabf7;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .theme-toggle:hover {
+            background-color: rgba(128, 128, 128, 0.2);
+        }
+        
+        blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 16px;
+            margin-left: 0;
+        }
+        
+        body.dark-theme blockquote {
+            border-left: 4px solid #444;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        body.dark-theme th, 
+        body.dark-theme td {
+            border: 1px solid #444;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+        }
+        
+        body.dark-theme th {
+            background-color: #2d2d2d;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    
+    <div id="content">
+        <!-- README content will be loaded here -->
+    </div>
+
+    <script>
+        // Theme management
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        function setTheme(theme) {
+            body.className = theme + '-theme';
+            localStorage.setItem('theme', theme);
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            themeToggle.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+        }
+
+        function toggleTheme() {
+            const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setTheme(prefersDark ? 'dark' : 'light');
+            }
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+        initTheme();
+
+        // Load README content
+        fetch('./README.md')
+            .then(response => response.text())
+            .then(markdown => {
+                // Simple markdown to HTML conversion for display
+                let html = markdown
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+                    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                    .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                    .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img alt="$1" src="$2" />')
+                    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
+                    .replace(/`(.*?)`/gim, '<code>$1</code>')
+                    .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+                    .replace(/\n$/gim, '<br />');
+                
+                document.getElementById('content').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('content').innerHTML = '<p>Error loading README.md: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>
