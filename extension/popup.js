@@ -114,6 +114,8 @@
       if (trackers.length === 0) {
         trackerList.innerHTML = '<li class="tracker-item no-trackers">No trackers detected yet. Refresh the page to analyze.</li>';
         evalCount.textContent = 'No data';
+        if (fingerprintList) fingerprintList.innerHTML = '<li class="tracker-item no-trackers">No data</li>';
+        if (canvasCount) canvasCount.textContent = 'No data';
         // Disable export in this case
         if (exportBtn) {
           exportBtn.disabled = true;
