@@ -7,6 +7,55 @@
   const fingerprintList = document.getElementById('fingerprintList');
   const canvasCount = document.getElementById('canvasCount');
   const exportBtn = document.getElementById('exportBtn');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+
+  // --- Theme Management ---
+  function setTheme(theme) {
+    body.className = theme + '-theme';
+    localStorage.setItem('theme', theme);
+    
+    // Update toggle button icon
+    themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    themeToggle.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+
+  function toggleTheme() {
+    const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  }
+
+  // Initialize theme
+  function initTheme() {
+    // Check for saved theme or system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // Check system preference
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefresDark ? 'dark' : 'light');
+    }
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        // Only update if user hasn't manually set a theme
+        if (!localStorage.getItem('theme')) {
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    }
+  }
+
+  // Add event listener for theme toggle
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // Initialize theme when popup loads
+  initTheme();
 
   // --- Helpers ---
   function pad2(n) { return String(n).padStart(2, '0'); }
@@ -51,7 +100,6 @@
     el.style.left = '50%';
     el.style.bottom = '16px';
     el.style.transform = 'translateX(-50%)';
-    el.style.background = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#323232';
     el.style.color = '#fff';
     el.style.padding = '8px 12px';
     el.style.borderRadius = '4px';
@@ -60,6 +108,16 @@
     el.style.zIndex = '9999';
     el.style.opacity = '0';
     el.style.transition = 'opacity 150ms ease-out';
+    
+    // Set background color based on theme
+    if (type === 'error') {
+      el.style.background = body.classList.contains('dark-theme') ? '#f44336' : '#f44336';
+    } else if (type === 'success') {
+      el.style.background = body.classList.contains('dark-theme') ? '#4CAF50' : '#4CAF50';
+    } else {
+      el.style.background = body.classList.contains('dark-theme') ? '#323232' : '#323232';
+    }
+    
     document.body.appendChild(el);
     requestAnimationFrame(() => { el.style.opacity = '1'; });
     setTimeout(() => {
