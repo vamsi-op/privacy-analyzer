@@ -42,7 +42,10 @@ program
     }
   });
 
-program.parse();
+// Only parse CLI arguments when executed directly
+if (require.main === module) {
+  program.parse();
+}
 
 // Parse and validate filter types
 function parseFilters(filterString) {
@@ -209,3 +212,13 @@ function displayResults(results, filters = ['trackers', 'eval', 'fingerprinting'
 
   console.log('\n' + '='.repeat(50));
 }
+
+// Export functions for testing
+module.exports = {
+  parseFilters,
+  filterResults,
+  fetchPage,
+  analyzeHTML,
+  displayResults,
+  program
+};

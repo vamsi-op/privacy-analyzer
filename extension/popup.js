@@ -7,17 +7,6 @@
   const exportBtn = document.getElementById('exportBtn');
 
   // --- Helpers ---
-  function pad2(n) { return String(n).padStart(2, '0'); }
-
-  function formatFilename(ts) {
-    const d = new Date(ts);
-    const yyyy = d.getFullYear();
-    const mm = pad2(d.getMonth() + 1);
-    const dd = pad2(d.getDate());
-    const HH = pad2(d.getHours());
-    const MM = pad2(d.getMinutes());
-    return `privacy-report-${yyyy}-${mm}-${dd}-${HH}${MM}.json`;
-  }
 
   function getBrowserInfo() {
     const ua = navigator.userAgent;
@@ -107,7 +96,7 @@
   chrome.runtime.sendMessage(
     { type: 'GET_TRACKERS', tabId: tab.id },
     (response) => {
-      const trackers = (response && Array.isArray(response.trackers)) ? response.trackers : [];
+  const trackers = (response && Array.isArray(response.trackers)) ? response.trackers : [];
       
       if (trackers.length === 0) {
         trackerList.innerHTML = '<li class="tracker-item no-trackers">No trackers detected yet. Refresh the page to analyze.</li>';
@@ -156,20 +145,24 @@
           const manifest = chrome.runtime.getManifest();
           const browser = getBrowserInfo();
 
-          const report = {
-            url: latestData.url || (tab && tab.url) || 'Unknown',
-            timestamp: latestData.timestamp ? new Date(latestData.timestamp).toISOString() : new Date().toISOString(),
-            thirdPartyDomains: domains,
-            inlineEvalPatterns: evalPatterns,
-            summary: {
-              totalThirdPartyDomains: domains.length,
-              totalEvalPatterns: evalPatterns.length
-            },
-            browser,
-            extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
-          };
+          const report = (window.ExportUtils && window.ExportUtils.buildReport)
+            ? window.ExportUtils.buildReport(latestData, domains, evalPatterns, manifest, browser, (tab && tab.url))
+            : {
+                url: latestData.url || (tab && tab.url) || 'Unknown',
+                timestamp: latestData.timestamp ? new Date(latestData.timestamp).toISOString() : new Date().toISOString(),
+                thirdPartyDomains: domains,
+                inlineEvalPatterns: evalPatterns,
+                summary: {
+                  totalThirdPartyDomains: domains.length,
+                  totalEvalPatterns: evalPatterns.length
+                },
+                browser,
+                extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
+              };
 
-          const filename = formatFilename(latestData.timestamp || Date.now());
+          const filename = (window.ExportUtils && window.ExportUtils.formatFilename)
+            ? window.ExportUtils.formatFilename(latestData.timestamp || Date.now())
+            : `privacy-report-${Date.now()}.json`;
           const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
           await downloadBlob(blob, filename);
         } catch (err) {
