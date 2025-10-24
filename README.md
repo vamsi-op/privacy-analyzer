@@ -6,9 +6,12 @@ A **local-first** privacy analyzer that detects trackers, third-party scripts, a
 
 ✅ **Browser Extension** (Chrome/Edge/Firefox compatible)
 - Detect third-party domains loading scripts
+<<<<<<< HEAD
+=======
 - Identify inline `eval()` patterns
 - **Real-time Canvas Fingerprinting Detection** - intercepts canvas API calls
 - Fingerprinting API detection (navigator, screen, WebGL)
+>>>>>>> upstream/main
 - Export detailed JSON reports
 - **Light/Dark Mode Toggle** - switch between themes for comfortable viewing
 - All analysis happens locally in your browser
@@ -21,16 +24,35 @@ A **local-first** privacy analyzer that detects trackers, third-party scripts, a
 
 ## Why Local-First?
 
-All analysis happens on your device. No data is sent to remote servers, ensuring complete privacy while analyzing privacy! 🔐
 
 ---
 
-## 🚀 Quick Start
 
-### Browser Extension
-
-1. **Load the extension:**
    - Open Chrome/Edge and navigate to `chrome://extensions/`
+## Running tests
+
+This repo uses Jest for unit tests.
+
+Prerequisites:
+- Node.js 18+ (CI also runs on Node 20)
+
+Run locally:
+
+```
+npm install
+npm test
+```
+
+Notes:
+- Coverage is generated automatically in the `coverage/` folder.
+- Tests cover:
+   - Detection utilities (third-party domains, eval/dangerous patterns)
+   - JSON export formatting (filename + report shape)
+   - CLI helpers (filter parsing, result filtering, basic HTML analysis)
+
+CI:
+- GitHub Actions runs `npm ci` and `npm test` on push/PR and uploads the coverage report artifact.
+
    - Enable "Developer mode"
    - Click "Load unpacked"
    - Select the `extension/` folder

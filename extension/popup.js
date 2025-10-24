@@ -34,8 +34,8 @@
       setTheme(savedTheme);
     } else {
       // Check system preference
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(prefresDark ? 'dark' : 'light');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setTheme(prefersDark ? 'dark' : 'light');
     }
     
     // Listen for system theme changes
@@ -58,17 +58,6 @@
   initTheme();
 
   // --- Helpers ---
-  function pad2(n) { return String(n).padStart(2, '0'); }
-
-  function formatFilename(ts) {
-    const d = new Date(ts);
-    const yyyy = d.getFullYear();
-    const mm = pad2(d.getMonth() + 1);
-    const dd = pad2(d.getDate());
-    const HH = pad2(d.getHours());
-    const MM = pad2(d.getMinutes());
-    return `privacy-report-${yyyy}-${mm}-${dd}-${HH}${MM}.json`;
-  }
 
   function getBrowserInfo() {
     const ua = navigator.userAgent;
@@ -167,7 +156,7 @@
   chrome.runtime.sendMessage(
     { type: 'GET_TRACKERS', tabId: tab.id },
     (response) => {
-      const trackers = (response && Array.isArray(response.trackers)) ? response.trackers : [];
+  const trackers = (response && Array.isArray(response.trackers)) ? response.trackers : [];
       
       if (trackers.length === 0) {
         trackerList.innerHTML = '<li class="tracker-item no-trackers">No trackers detected yet. Refresh the page to analyze.</li>';
@@ -260,7 +249,9 @@
             extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
           };
 
-          const filename = formatFilename(latestData.timestamp || Date.now());
+          const filename = (window.ExportUtils && window.ExportUtils.formatFilename)
+            ? window.ExportUtils.formatFilename(latestData.timestamp || Date.now())
+            : `privacy-report-${Date.now()}.json`;
           const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
           await downloadBlob(blob, filename);
         } catch (err) {
