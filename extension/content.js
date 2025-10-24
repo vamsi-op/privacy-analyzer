@@ -174,6 +174,8 @@
   // Run detection
   const thirdPartyDomains = detectThirdPartyScripts();
   const inlineEvalPatterns = detectInlineScripts();
+  const fingerprintingAPIs = detectFingerprinting();
+  const canvasDetections = detectCanvasFingerprinting();
 
   // Send results to background script
   chrome.runtime.sendMessage({
@@ -182,9 +184,147 @@
       url: window.location.href,
       thirdPartyDomains,
       inlineEvalPatterns,
+      fingerprintingAPIs,
+      canvasDetections,
       timestamp: Date.now()
     }
   });
 
   console.log('Privacy Analyzer: detected', thirdPartyDomains.length, 'third-party domains');
 })();
+
+/**
+ * Detect fingerprinting-ish APIs and canvas usage on the page.
+ * Returns an array of detected items (strings).
+ */
+function detectFingerprinting() {
+  const detections = new Set();
+
+  // 1) Presence of <canvas> elements is often used for fingerprinting
+  try {
+    const canvasCount = document.querySelectorAll('canvas').length;
+    if (canvasCount > 0) {
+      detections.add('canvas.element_present');
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // 2) Scan inline scripts for common canvas / fingerprinting API usage
+  const inlineScripts = document.querySelectorAll('script:not([src])');
+  const patterns = [
+    { id: 'canvas.getContext', re: /\.getContext\s*\(\s*['\"]2d['\"]\s*\)/i },
+    { id: 'canvas.toDataURL', re: /\.toDataURL\s*\(/i },
+    { id: 'canvas.toBlob', re: /\.toBlob\s*\(/i },
+    { id: 'navigator.plugins', re: /navigator\.plugins/i },
+    { id: 'navigator.userAgent', re: /navigator\.userAgent/i },
+    { id: 'screen.dimensions', re: /screen\.(width|height)/i },
+    { id: 'webgl.getParameter', re: /getParameter\s*\(/i }
+  ];
+
+  inlineScripts.forEach(script => {
+    const code = script.textContent || '';
+    patterns.forEach(p => {
+      if (p.re.test(code)) {
+        detections.add(p.id);
+      }
+    });
+  });
+
+  return Array.from(detections);
+}
+
+/**
+ * Advanced runtime canvas fingerprinting detection.
+ * Intercepts canvas API calls to detect actual fingerprinting attempts.
+ * Returns an array of detection events with details.
+ */
+function detectCanvasFingerprinting() {
+  try {
+    const detections = [];
+
+    // Helper to record a detection
+    function record(canvasInfo) {
+      const payload = Object.assign({ url: window.location.href, timestamp: Date.now() }, canvasInfo);
+      detections.push(payload);
+      try {
+        // Send immediate message to background for real-time storage
+        chrome.runtime.sendMessage({ type: 'CANVAS_FINGERPRINT', data: payload });
+      } catch (e) {
+        // Ignore messaging errors
+      }
+    }
+
+    // Proxy canvas prototype methods to detect calls
+    const HTMLCanvasProto = HTMLCanvasElement && HTMLCanvasElement.prototype;
+    if (HTMLCanvasProto) {
+      const originalToDataURL = HTMLCanvasProto.toDataURL;
+      HTMLCanvasProto.toDataURL = function () {
+        try {
+          const info = {
+            method: 'toDataURL',
+            width: this.width,
+            height: this.height,
+            inDOM: !!this.isConnected
+          };
+          record(info);
+        } catch (e) {}
+        return originalToDataURL.apply(this, arguments);
+      };
+
+      const originalGetImageData = CanvasRenderingContext2D && CanvasRenderingContext2D.prototype.getImageData;
+      if (originalGetImageData) {
+        CanvasRenderingContext2D.prototype.getImageData = function () {
+          try {
+            const canvas = this.canvas;
+            const info = {
+              method: 'getImageData',
+              width: canvas ? canvas.width : null,
+              height: canvas ? canvas.height : null,
+              inDOM: canvas ? !!canvas.isConnected : null
+            };
+            record(info);
+          } catch (e) {}
+          return originalGetImageData.apply(this, arguments);
+        };
+      }
+
+      // Monitor creation of canvases to detect invisible usage patterns
+      const originalCreateElement = Document.prototype.createElement;
+      Document.prototype.createElement = function (tagName) {
+        const el = originalCreateElement.call(this, tagName);
+        try {
+          if (String(tagName).toLowerCase() === 'canvas') {
+            // Observe if canvas is ever attached to DOM within a short time window
+            const createdAt = Date.now();
+            let attached = false;
+            const checkAttached = () => !!el.isConnected;
+
+            const observer = new MutationObserver(() => {
+              if (checkAttached()) {
+                attached = true;
+                observer.disconnect();
+              }
+            });
+            observer.observe(document, { childList: true, subtree: true });
+
+            // After 2 seconds, if not attached and small size, mark suspicious
+            setTimeout(() => {
+              observer.disconnect();
+              const w = el.width || el.clientWidth || 0;
+              const h = el.height || el.clientHeight || 0;
+              if (!attached && (w <= 300 && h <= 150)) {
+                record({ method: 'createElement', width: w, height: h, inDOM: false, note: 'canvas created but not attached (possible fingerprinting)' });
+              }
+            }, 2000);
+          }
+        } catch (e) {}
+        return el;
+      };
+    }
+
+    return detections;
+  } catch (e) {
+    return [];
+  }
+}

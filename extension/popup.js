@@ -4,7 +4,58 @@
 
   const trackerList = document.getElementById('trackerList');
   const evalCount = document.getElementById('evalCount');
+  const fingerprintList = document.getElementById('fingerprintList');
+  const canvasCount = document.getElementById('canvasCount');
   const exportBtn = document.getElementById('exportBtn');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+
+  // --- Theme Management ---
+  function setTheme(theme) {
+    body.className = theme + '-theme';
+    localStorage.setItem('theme', theme);
+    
+    // Update toggle button icon
+    themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    themeToggle.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+
+  function toggleTheme() {
+    const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  }
+
+  // Initialize theme
+  function initTheme() {
+    // Check for saved theme or system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // Check system preference
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setTheme(prefersDark ? 'dark' : 'light');
+    }
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        // Only update if user hasn't manually set a theme
+        if (!localStorage.getItem('theme')) {
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    }
+  }
+
+  // Add event listener for theme toggle
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // Initialize theme when popup loads
+  initTheme();
 
   // --- Helpers ---
 
@@ -38,7 +89,6 @@
     el.style.left = '50%';
     el.style.bottom = '16px';
     el.style.transform = 'translateX(-50%)';
-    el.style.background = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#323232';
     el.style.color = '#fff';
     el.style.padding = '8px 12px';
     el.style.borderRadius = '4px';
@@ -47,6 +97,16 @@
     el.style.zIndex = '9999';
     el.style.opacity = '0';
     el.style.transition = 'opacity 150ms ease-out';
+    
+    // Set background color based on theme
+    if (type === 'error') {
+      el.style.background = body.classList.contains('dark-theme') ? '#f44336' : '#f44336';
+    } else if (type === 'success') {
+      el.style.background = body.classList.contains('dark-theme') ? '#4CAF50' : '#4CAF50';
+    } else {
+      el.style.background = body.classList.contains('dark-theme') ? '#323232' : '#323232';
+    }
+    
     document.body.appendChild(el);
     requestAnimationFrame(() => { el.style.opacity = '1'; });
     setTimeout(() => {
@@ -101,6 +161,8 @@
       if (trackers.length === 0) {
         trackerList.innerHTML = '<li class="tracker-item no-trackers">No trackers detected yet. Refresh the page to analyze.</li>';
         evalCount.textContent = 'No data';
+        if (fingerprintList) fingerprintList.innerHTML = '<li class="tracker-item no-trackers">No data</li>';
+        if (canvasCount) canvasCount.textContent = 'No data';
         // Disable export in this case
         if (exportBtn) {
           exportBtn.disabled = true;
@@ -113,6 +175,8 @@
       const latestData = trackers[trackers.length - 1];
       const domains = (latestData && Array.isArray(latestData.thirdPartyDomains)) ? latestData.thirdPartyDomains : [];
       const evalPatterns = (latestData && Array.isArray(latestData.inlineEvalPatterns)) ? latestData.inlineEvalPatterns : [];
+      const fingerprinting = (latestData && Array.isArray(latestData.fingerprintingAPIs)) ? latestData.fingerprintingAPIs : [];
+      const canvasDetections = (latestData && Array.isArray(latestData.canvasDetections)) ? latestData.canvasDetections : [];
 
       // Display top 3 third-party domains
       if (domains.length === 0) {
@@ -135,6 +199,25 @@
         evalCount.innerHTML = `<span style="color: #FF9800; font-weight: 500;">⚠ ${evalPatterns.length} inline eval pattern(s) detected</span>`;
       }
 
+      // Display fingerprinting detections (simple list)
+      if (fingerprinting.length === 0) {
+        if (fingerprintList) fingerprintList.innerHTML = '<li class="tracker-item no-trackers">✓ No fingerprinting APIs detected</li>';
+      } else {
+        if (fingerprintList) {
+          fingerprintList.innerHTML = fingerprinting.map(f => `<li class="tracker-item">👁 ${f}</li>`).join('');
+        }
+      }
+
+      // Display canvas fingerprinting detections
+      if (canvasDetections.length === 0) {
+        if (canvasCount) canvasCount.innerHTML = '<span class="no-trackers">✓ No canvas fingerprinting detected</span>';
+      } else {
+        const suspiciousCount = canvasDetections.filter(d => !d.inDOM || d.note).length;
+        if (canvasCount) {
+          canvasCount.innerHTML = `<span style="color: #FF5722; font-weight: 500;">🎨 ${canvasDetections.length} canvas API call(s) detected (${suspiciousCount} suspicious)</span>`;
+        }
+      }
+
       // Export functionality
       exportBtn.addEventListener('click', async () => {
         try {
@@ -145,20 +228,26 @@
           const manifest = chrome.runtime.getManifest();
           const browser = getBrowserInfo();
 
-          const report = (window.ExportUtils && window.ExportUtils.buildReport)
-            ? window.ExportUtils.buildReport(latestData, domains, evalPatterns, manifest, browser, (tab && tab.url))
-            : {
-                url: latestData.url || (tab && tab.url) || 'Unknown',
-                timestamp: latestData.timestamp ? new Date(latestData.timestamp).toISOString() : new Date().toISOString(),
-                thirdPartyDomains: domains,
-                inlineEvalPatterns: evalPatterns,
-                summary: {
-                  totalThirdPartyDomains: domains.length,
-                  totalEvalPatterns: evalPatterns.length
-                },
-                browser,
-                extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
-              };
+          const report = {
+            url: latestData.url || (tab && tab.url) || 'Unknown',
+            timestamp: latestData.timestamp ? new Date(latestData.timestamp).toISOString() : new Date().toISOString(),
+            thirdPartyDomains: domains,
+            inlineEvalPatterns: evalPatterns,
+            fingerprintingAPIs: fingerprinting,
+            canvasFingerprinting: {
+              detections: canvasDetections,
+              totalCalls: canvasDetections.length,
+              suspiciousCalls: canvasDetections.filter(d => !d.inDOM || d.note).length
+            },
+            summary: {
+              totalThirdPartyDomains: domains.length,
+              totalEvalPatterns: evalPatterns.length,
+              totalFingerprintingAPIs: fingerprinting.length,
+              totalCanvasCalls: canvasDetections.length
+            },
+            browser,
+            extensionVersion: manifest && manifest.version ? manifest.version : 'Unknown'
+          };
 
           const filename = (window.ExportUtils && window.ExportUtils.formatFilename)
             ? window.ExportUtils.formatFilename(latestData.timestamp || Date.now())

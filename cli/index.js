@@ -26,7 +26,7 @@ program
     try {
       const filters = parseFilters(options.filter);
       const html = await fetchPage(url);
-      let results = analyzeHTML(html, url);
+  let results = analyzeHTML(html, url);
       results = filterResults(results, filters);
       
       displayResults(results, filters);

@@ -9,7 +9,8 @@ module.exports = {
     "cli/**/*.js",
     "!extension/background.js",
     "!extension/content.js",
-    "!extension/popup.js"
+    "!extension/popup.js",
+    "!**/*.test.js"
   ],
   coverageReporters: ["text", "lcov"],
 };

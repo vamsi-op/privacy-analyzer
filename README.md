@@ -6,7 +6,14 @@ A **local-first** privacy analyzer that detects trackers, third-party scripts, a
 
 ✅ **Browser Extension** (Chrome/Edge/Firefox compatible)
 - Detect third-party domains loading scripts
+<<<<<<< HEAD
+=======
+- Identify inline `eval()` patterns
+- **Real-time Canvas Fingerprinting Detection** - intercepts canvas API calls
+- Fingerprinting API detection (navigator, screen, WebGL)
+>>>>>>> upstream/main
 - Export detailed JSON reports
+- **Light/Dark Mode Toggle** - switch between themes for comfortable viewing
 - All analysis happens locally in your browser
 
 ✅ **CLI Tool**
@@ -54,6 +61,7 @@ CI:
    - Visit any website
    - Click the Privacy Analyzer icon
    - View detected trackers and export reports
+   - Toggle between light and dark themes using the 🌙/☀️ icon in the top right corner
 
 ### CLI Tool
 
